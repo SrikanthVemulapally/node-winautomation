@@ -1,95 +1,99 @@
+<div align="center">
+
 # node-winautomation
 
-A Node.js native addon for Windows UI Automation, providing comprehensive bindings to the Windows UI Automation API for automating Windows desktop applications.
+[![npm version](https://img.shields.io/npm/v/node-winautomation.svg)](https://www.npmjs.com/package/node-winautomation)
+[![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)](https://github.com/user/node-winautomation)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)](https://nodejs.org/)
 
-## Overview
+**A powerful Node.js native addon for Windows UI Automation**
 
-This project is based on [@bright-fish/node-ui-automation](https://github.com/bright-fish/node-ui-automation) and provides full access to Windows UI Automation APIs through native C++ bindings. It enables you to:
+Automate Windows desktop applications with full access to the Microsoft UI Automation API.
 
-- Automate Windows desktop applications
-- Inspect UI elements and their properties
-- Interact with controls (buttons, text boxes, menus, etc.)
-- Handle UI events and automation patterns
-- Access accessibility information
+[Installation](#installation) • [Quick Start](#quick-start) • [API Reference](#api-reference) • [Examples](#examples) • [Contributing](#contributing)
 
-## Features
+</div>
 
-- **Complete UI Automation Support**: Full bindings to Windows UI Automation API
-- **Pattern Support**: All major automation patterns (Invoke, Value, Text, Selection, Grid, etc.)
-- **Event Handling**: Support for automation events, focus changes, property changes, and structure changes
-- **Type Definitions**: Full TypeScript definitions included
-- **Native Performance**: C++ native addon for optimal performance
+---
 
-## Prerequisites
+## ✨ Features
 
-- **Windows Operating System** (Required)
-- **Node.js** (v12 or higher recommended)
-- **Visual Studio** or **Visual Studio Build Tools** with C++ support
-- **Python** (for node-gyp)
-- **node-gyp** installed globally: `npm install -g node-gyp`
+- **🎯 Complete UI Automation API** — Full native bindings to Windows UI Automation
+- **🔧 30+ Automation Patterns** — Invoke, Value, Text, Selection, Grid, Window, and more
+- **📡 Event Handling** — Focus changes, property changes, structure changes, automation events
+- **📘 TypeScript Support** — Comprehensive type definitions included
+- **⚡ Native Performance** — C++ addon for optimal speed
+- **🔍 Element Discovery** — Find elements by name, control type, automation ID, and custom conditions
 
-## Installation
+## 📋 Requirements
 
-1. Clone or download this repository
-2. Navigate to the project directory
-3. Install dependencies and build:
+| Requirement | Version |
+|-------------|---------|
+| **OS** | Windows 10/11 |
+| **Node.js** | ≥ 14.0.0 |
+| **Visual Studio** | 2019 or 2022 with C++ Desktop Development |
+| **Python** | 3.x (for node-gyp) |
+
+## 📦 Installation
+
+### From npm
 
 ```bash
-npm install
-npm run configure
-npm run build
+npm install node-winautomation
 ```
 
-## Build Scripts
+The native addon will be compiled automatically during installation.
 
-- `npm run configure` - Configure the native addon build
-- `npm run build` - Build the native addon
-- `npm run clean` - Clean build artifacts
-- `npm run rebuild` - Clean and rebuild
-- `npm test` - Run tests (from tests directory)
+### From Source
 
-## Usage
+```bash
+git clone https://github.com/user/node-winautomation.git
+cd node-winautomation
+npm install
+```
 
-### Basic Example - Click OK Button in About Windows
+### Build Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run configure` | Configure the native build |
+| `npm run build` | Build the native addon |
+| `npm run rebuild` | Clean and rebuild |
+| `npm run clean` | Remove build artifacts |
+| `npm test` | Run test suite |
+
+## 🚀 Quick Start
+
+### Basic Example: Click a Button
 
 ```javascript
 const { Automation, PropertyIds, TreeScopes, PatternIds } = require('node-winautomation');
 
+// Initialize automation
 const automation = new Automation();
+const root = automation.getRootElement();
 
-// Get desktop root element
-const desktopElement = automation.getRootElement();
-
-// Find "About Windows" window
-const aboutWindowsProperty = automation.createPropertyCondition(
+// Find a window by name
+const windowCondition = automation.createPropertyCondition(
   PropertyIds.NamePropertyId,
-  'About Windows'
+  'My Application'
 );
+const appWindow = root.findFirst(TreeScopes.Children, windowCondition);
 
-const winverWindow = desktopElement.findFirst(
-  TreeScopes.Subtree,
-  aboutWindowsProperty
-);
-
-// Find OK button
-const okProperty = automation.createPropertyCondition(
+// Find and click a button
+const buttonCondition = automation.createPropertyCondition(
   PropertyIds.NamePropertyId,
-  "OK"
+  'Submit'
 );
+const button = appWindow.findFirst(TreeScopes.Descendants, buttonCondition);
 
-const okButton = winverWindow.findFirst(
-  TreeScopes.Subtree,
-  okProperty
-);
-
-// Click the button
-const invokeProvider = okButton.getCurrentPattern(
-  PatternIds.InvokePatternId
-);
-invokeProvider.invoke();
+// Click using Invoke pattern
+const invokePattern = button.getCurrentPattern(PatternIds.InvokePatternId);
+invokePattern.invoke();
 ```
 
-### Advanced Example - Automate Notepad
+### Set Text in a Text Box
 
 ```javascript
 const { Automation, PropertyIds, ControlTypeIds, TreeScopes, PatternIds } = require('node-winautomation');
@@ -97,143 +101,356 @@ const { Automation, PropertyIds, ControlTypeIds, TreeScopes, PatternIds } = requ
 const automation = new Automation();
 const root = automation.getRootElement();
 
-// Find Notepad window
-const condition = automation.createPropertyCondition(
-  PropertyIds.NamePropertyId,
-  'Notepad'
-);
-
-const notepadWindow = root.findFirst(
+// Find Notepad
+const notepad = root.findFirst(
   TreeScopes.Children,
-  condition
+  automation.createPropertyCondition(PropertyIds.NamePropertyId, 'Untitled - Notepad')
 );
 
-if (notepadWindow) {
-  console.log('Found Notepad window');
+// Find the edit control
+const editControl = notepad.findFirst(
+  TreeScopes.Descendants,
+  automation.createPropertyCondition(PropertyIds.ControlTypePropertyId, ControlTypeIds.EditControlTypeId)
+);
 
-  // Find the edit control
-  const editCondition = automation.createPropertyCondition(
-    PropertyIds.ControlTypePropertyId,
-    ControlTypeIds.Edit
-  );
+// Set text using Value pattern
+const valuePattern = editControl.getCurrentPattern(PatternIds.ValuePatternId);
+valuePattern.setValue('Hello from node-winautomation!');
+```
 
-  const editControl = notepadWindow.findFirst(
-    TreeScopes.Descendants,
-    editCondition
-  );
+### Listen for Focus Changes
 
-  if (editControl) {
-    // Use Value pattern to set text
-    const valuePattern = editControl.getCurrentPattern(
-      PatternIds.ValuePatternId
-    );
-    valuePattern.setValue('Hello from node-winautomation!');
-  }
+```javascript
+const { 
+  Automation, 
+  AutomationFocusChangedEventHandler 
+} = require('node-winautomation');
+
+const automation = new Automation();
+
+// Create event handler
+const focusHandler = new AutomationFocusChangedEventHandler((element) => {
+  console.log('Focus changed to:', element.currentName);
+});
+
+// Register handler
+automation.addFocusChangedEventHandler(null, focusHandler);
+
+// Keep process running
+setInterval(() => {}, 1000);
+
+// Cleanup when done
+// automation.removeFocusChangedEventHandler(focusHandler);
+```
+
+## 📖 API Reference
+
+### Automation Class
+
+The main entry point for UI Automation operations.
+
+```typescript
+class Automation {
+  // Element retrieval
+  getRootElement(): AutomationElement;
+  getFocusedElement(): AutomationElement;
+  elementFromPoint(point: Point): AutomationElement;
+
+  // Condition creation
+  createPropertyCondition(propertyId: PropertyIds, value: Variant): AutomationCondition;
+  createAndCondition(c1: AutomationCondition, c2: AutomationCondition): AutomationCondition;
+  createOrCondition(c1: AutomationCondition, c2: AutomationCondition): AutomationCondition;
+  createNotCondition(condition: AutomationCondition): AutomationCondition;
+  createTrueCondition(): AutomationCondition;
+  createFalseCondition(): AutomationCondition;
+
+  // Tree walkers
+  createTreeWalker(condition: AutomationCondition): AutomationTreeWalker;
+  rawViewWalker: AutomationTreeWalker;
+  controlViewWalker: AutomationTreeWalker;
+  contentViewWalker: AutomationTreeWalker;
+
+  // Event handling
+  addFocusChangedEventHandler(cacheRequest, handler): void;
+  addAutomationEventHandler(eventId, element, scope, cacheRequest, handler): void;
+  addPropertyChangedEventHandler(element, scope, cacheRequest, handler): void;
+  addStructureChangedEventHandler(element, scope, cacheRequest, handler): void;
+  removeAllEventHandlers(): void;
+
+  // Utilities
+  compareElements(e1: AutomationElement, e2: AutomationElement): boolean;
+  createCacheRequest(): AutomationCacheRequest;
 }
 ```
 
-## API Reference
+### AutomationElement
 
-### Main Automation Object
+Represents a UI element in the automation tree.
 
-The module exports the main `Automation` class which provides:
+```typescript
+interface AutomationElement {
+  // Search methods
+  findFirst(scope: TreeScopes, condition: AutomationCondition): AutomationElement;
+  findAll(scope: TreeScopes, condition: AutomationCondition): AutomationElement[];
 
-- `getRootElement()` - Get the desktop root element
-- `createPropertyCondition(propertyId, value)` - Create search conditions
-- `createTrueCondition()` / `createFalseCondition()` - Create boolean conditions
-- `createAndCondition()` / `createOrCondition()` / `createNotCondition()` - Combine conditions
-- Element walking and tree navigation methods
+  // Pattern retrieval
+  getCurrentPattern(patternId: PatternIds): Pattern;
+  getCachedPattern(patternId: PatternIds): Pattern;
 
-### Element Properties
+  // Common properties
+  currentName: string;
+  currentClassName: string;
+  currentControlType: ControlTypeIds;
+  currentAutomationId: string;
+  currentBoundingRectangle: Rect;
+  currentIsEnabled: boolean;
+  currentIsOffscreen: boolean;
+  currentProcessId: number;
 
-Elements expose properties such as:
-- `currentName` - Element name
-- `currentClassName` - Class name
-- `currentControlType` - Control type ID
-- `currentBoundingRectangle` - Screen coordinates
-- `currentIsEnabled` - Enabled state
-- And many more...
+  // Methods
+  setFocus(): void;
+  getClickablePoint(): Point | null;
+  getRuntimeId(): number[];
+}
+```
 
 ### Automation Patterns
 
-Supported patterns include:
-- **Invoke Pattern** - Click buttons and menu items
-- **Value Pattern** - Get/set values in text boxes
-- **Text Pattern** - Advanced text manipulation
-- **Selection Pattern** - Handle list/combo box selections
-- **Toggle Pattern** - Work with checkboxes
-- **Window Pattern** - Window manipulation
-- **Grid Pattern** - Table/grid interaction
-- And many more...
+| Pattern | Description | Key Methods |
+|---------|-------------|-------------|
+| **IInvokePattern** | Click buttons, menu items | `invoke()` |
+| **IValuePattern** | Get/set text values | `setValue(value)`, `currentValue` |
+| **ITogglePattern** | Checkboxes, toggle buttons | `toggle()`, `currentToggleState` |
+| **ISelectionPattern** | Lists, combo boxes | `getCurrentSelection()` |
+| **ISelectionItemPattern** | List items | `select()`, `addToSelection()` |
+| **IExpandCollapsePattern** | Tree nodes, menus | `expand()`, `collapse()` |
+| **IScrollPattern** | Scrollable containers | `scroll()`, `setScrollPercent()` |
+| **IWindowPattern** | Window operations | `close()`, `setWindowVisualState()` |
+| **ITextPattern** | Rich text controls | `documentRange`, `getSelection()` |
+| **IGridPattern** | Tables, data grids | `getItem(row, col)` |
+| **ITransformPattern** | Move/resize elements | `move()`, `resize()`, `rotate()` |
+| **IRangeValuePattern** | Sliders, progress bars | `setValue()`, `currentValue` |
 
 ### Enumerations
 
-The module provides access to all UI Automation enumerations:
-- `ControlTypeIds` - Button, Edit, Window, etc.
-- `PropertyIds` - Name, ClassName, ControlType, etc.
-- `PatternIds` - Invoke, Value, Text, etc.
-- `TreeScopes` - Element, Children, Descendants, Subtree, etc.
+#### TreeScopes
+```typescript
+enum TreeScopes {
+  None = 0,
+  Element = 0x1,
+  Children = 0x2,
+  Descendants = 0x4,
+  Parent = 0x8,
+  Ancestors = 0x10,
+  Subtree = Element | Children | Descendants
+}
+```
 
-## Project Structure
+#### ControlTypeIds
+```typescript
+enum ControlTypeIds {
+  ButtonControlTypeId = 50000,
+  CheckBoxControlTypeId = 50002,
+  ComboBoxControlTypeId = 50003,
+  EditControlTypeId = 50004,
+  ListControlTypeId = 50008,
+  MenuControlTypeId = 50009,
+  WindowControlTypeId = 50032,
+  // ... and 30+ more
+}
+```
+
+#### PatternIds
+```typescript
+enum PatternIds {
+  InvokePatternId = 10000,
+  SelectionPatternId = 10001,
+  ValuePatternId = 10002,
+  TogglePatternId = 10015,
+  WindowPatternId = 10009,
+  TextPatternId = 10014,
+  // ... and 25+ more
+}
+```
+
+#### PropertyIds
+```typescript
+enum PropertyIds {
+  NamePropertyId = 30005,
+  ControlTypePropertyId = 30003,
+  AutomationIdPropertyId = 30011,
+  ClassNamePropertyId = 30012,
+  IsEnabledPropertyId = 30010,
+  // ... and 150+ more
+}
+```
+
+## 📁 Examples
+
+### Calculator Automation
+
+```javascript
+// examples/calculator-example.js
+const { Automation, PropertyIds, TreeScopes, PatternIds } = require('node-winautomation');
+
+async function clickButton(window, buttonName, automation) {
+  const condition = automation.createPropertyCondition(PropertyIds.NamePropertyId, buttonName);
+  const button = window.findFirst(TreeScopes.Descendants, condition);
+  
+  if (button) {
+    const invokePattern = button.getCurrentPattern(PatternIds.InvokePatternId);
+    invokePattern.invoke();
+    await new Promise(r => setTimeout(r, 200));
+  }
+}
+
+async function calculate() {
+  const automation = new Automation();
+  const root = automation.getRootElement();
+  
+  // Find Calculator
+  const calcCondition = automation.createPropertyCondition(PropertyIds.NamePropertyId, 'Calculator');
+  const calculator = root.findFirst(TreeScopes.Children, calcCondition);
+  
+  if (calculator) {
+    // Calculate 2 + 3 = 5
+    await clickButton(calculator, 'Two', automation);
+    await clickButton(calculator, 'Plus', automation);
+    await clickButton(calculator, 'Three', automation);
+    await clickButton(calculator, 'Equals', automation);
+  }
+}
+
+calculate();
+```
+
+### Element Inspector
+
+```javascript
+const { Automation, TreeScopes } = require('node-winautomation');
+
+function inspectElement(element, depth = 0) {
+  const indent = '  '.repeat(depth);
+  console.log(`${indent}Name: ${element.currentName}`);
+  console.log(`${indent}Type: ${element.currentLocalizedControlType}`);
+  console.log(`${indent}Class: ${element.currentClassName}`);
+  console.log(`${indent}AutomationId: ${element.currentAutomationId}`);
+  console.log(`${indent}---`);
+}
+
+function walkTree(element, automation, depth = 0, maxDepth = 3) {
+  if (depth > maxDepth) return;
+  
+  inspectElement(element, depth);
+  
+  const children = element.findAll(
+    TreeScopes.Children,
+    automation.createTrueCondition()
+  );
+  
+  for (const child of children) {
+    walkTree(child, automation, depth + 1, maxDepth);
+  }
+}
+
+const automation = new Automation();
+const root = automation.getRootElement();
+walkTree(root, automation);
+```
+
+## 📂 Project Structure
 
 ```
 node-winautomation/
-├── AutomationAddon.cc/h      # Main addon entry point
-├── binding.gyp                # Build configuration
-├── index.js                   # Module entry
-├── index.d.ts                 # TypeScript definitions
-├── enumerations/              # UI Automation enumerations
-├── patterns/                  # Automation pattern wrappers
-├── utilities/                 # Helper utilities and event handlers
-├── wrappers/                  # COM object wrappers
-└── tests/                     # Test suite
+├── index.js                 # Module entry point
+├── index.d.ts               # TypeScript definitions
+├── binding.gyp              # Native build configuration
+├── package.json
+│
+├── wrappers/                # Core COM wrappers
+│   ├── IUIAutomationWrapper.*
+│   ├── IUIAutomationElementWrapper.*
+│   ├── IUIAutomationTreeWalkerWrapper.*
+│   └── ...
+│
+├── patterns/                # Automation pattern implementations
+│   ├── IUIAutomationInvokePatternWrapper.*
+│   ├── IUIAutomationValuePatternWrapper.*
+│   ├── IUIAutomationTextPatternWrapper.*
+│   └── ... (30+ patterns)
+│
+├── enumerations/            # UI Automation enums
+│   ├── ControlTypeIdsWrapper.*
+│   ├── PropertyIdsWrapper.*
+│   └── ...
+│
+├── utilities/               # Event handlers & helpers
+│   ├── AutomationEventHandler.*
+│   ├── FocusChangedEventHandler.*
+│   └── ...
+│
+├── examples/                # Usage examples
+│   ├── calculator-example.js
+│   └── notepad-example.js
+│
+└── tests/                   # Test suite
+    └── *.test.js
 ```
 
-## Testing
+## 🔧 Troubleshooting
 
-Tests are located in the `tests` directory:
+### Build Issues
 
-```bash
-cd tests
-npm install
-npm test
-```
+| Error | Solution |
+|-------|----------|
+| `Cannot find module 'node-gyp'` | `npm install -g node-gyp` |
+| `MSBuild.exe not found` | Install Visual Studio Build Tools with C++ workload |
+| `Python not found` | Install Python 3.x and add to PATH |
+| `node-gyp rebuild failed` | Run `npm run clean` then `npm run rebuild` |
 
-## Troubleshooting
+### Runtime Issues
 
-### Build Errors
+| Error | Solution |
+|-------|----------|
+| `Module not found` | Ensure `build/Release/Automation.node` exists |
+| `Access Denied` | Run Node.js as Administrator |
+| `Element not found` | Verify window is open and element name is correct |
+| `Pattern not supported` | Check if element supports the requested pattern |
 
-1. **"Cannot find module 'node-gyp'"**
-   - Install node-gyp globally: `npm install -g node-gyp`
+### Tips
 
-2. **"MSBuild.exe not found"**
-   - Install Visual Studio Build Tools with C++ support
-   - Or use: `npm install --global windows-build-tools`
+- Use **Accessibility Insights** or **Inspect.exe** to explore UI element properties
+- Some applications require **elevated privileges** (run as Administrator)
+- UWP apps may have different element structures than Win32 apps
+- Use `TreeScopes.Descendants` carefully on large trees (can be slow)
 
-3. **Python errors**
-   - Ensure Python is installed and in PATH
-   - node-gyp requires Python 2.7 or 3.x
+## 🤝 Contributing
 
-### Runtime Errors
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. **"The specified module could not be found"**
-   - Ensure the addon was built successfully
-   - Check that `build/Release/Automation.node` exists
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
 
-2. **Access Denied errors**
-   - Some applications may require elevated privileges
-   - Run Node.js as Administrator if needed
+## 🙏 Credits
 
-## Credits
+This project is based on the excellent work by **Chris Nimmons** and **Jake Cyr** in the [@bright-fish/node-ui-automation](https://github.com/bright-fish/node-ui-automation) project.
 
-This project is based on the excellent work by Chris Nimmons and Jake Cyr in the [@bright-fish/node-ui-automation](https://github.com/bright-fish/node-ui-automation) project.
+## 📄 License
 
-## License
+MIT License - See [LICENSE](LICENSE) file for details.
 
-MIT License - See LICENSE file for details
-
-## Resources
+## 📚 Resources
 
 - [Windows UI Automation Overview](https://docs.microsoft.com/en-us/windows/win32/winauto/entry-uiauto-win32)
 - [UI Automation Control Patterns](https://docs.microsoft.com/en-us/windows/win32/winauto/uiauto-controlpatternsoverview)
-- [Node.js Addons Documentation](https://nodejs.org/api/addons.html)
+- [Accessibility Insights for Windows](https://accessibilityinsights.io/docs/windows/overview/)
+- [Node.js N-API Documentation](https://nodejs.org/api/n-api.html)
+
+---
+
+<div align="center">
+Made with ❤️ for Windows automation
+</div>
