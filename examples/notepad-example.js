@@ -39,16 +39,21 @@ async function automateNotepad() {
     console.log('Found Notepad window:', notepadWindow.currentName);
 
     // Find the edit control (text area)
+    // Windows 11 Notepad uses Document control type, older versions use Edit
     console.log('Looking for edit control...');
-    const editCondition = automation.createPropertyCondition(
-      PropertyIds.ControlTypePropertyId,
-      ControlTypeIds.Edit
-    );
-
-    const editControl = notepadWindow.findFirst(
+    
+    // Try Document first (Windows 11), then Edit (older Windows)
+    let editControl = notepadWindow.findFirst(
       TreeScopes.Descendants,
-      editCondition
+      automation.createPropertyCondition(PropertyIds.ControlTypePropertyId, ControlTypeIds.DocumentControlTypeId)
     );
+    
+    if (!editControl) {
+      editControl = notepadWindow.findFirst(
+        TreeScopes.Descendants,
+        automation.createPropertyCondition(PropertyIds.ControlTypePropertyId, ControlTypeIds.EditControlTypeId)
+      );
+    }
 
     if (!editControl) {
       console.log('Edit control not found in Notepad window.');
