@@ -1,0 +1,19 @@
+{
+  "name": "node-winautomation-tests",
+  "version": "1.0.0",
+  "description": "Test suite for node-winautomation",
+  "main": "index.js",
+  "scripts": {
+    "link": "npm link node-winautomation",
+    "test": "jest"
+  },
+  "author": "Srikanth",
+  "license": "MIT",
+  "dependencies": {
+    "node-winautomation": "file:.."
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.1",
+    "jest": "^27.0.6"
+  }
+}
