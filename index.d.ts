@@ -220,7 +220,7 @@ export declare interface IRangeValuePattern {
     currentSmallChange: number;
     currentValue: string;
 
-    setValue(value: number);
+    setValue(value: number): void;
 }
 
 // skipping
@@ -584,9 +584,9 @@ export declare interface ITransformPattern {
     currentCanResize: boolean;
     currentCanRotate: boolean;
 
-    move(x: number, y: number);
-    resize(width: number, height: number);
-    rotate(degrees: number);
+    move(x: number, y: number): void;
+    resize(width: number, height: number): void;
+    rotate(degrees: number): void;
 }
 
 export declare enum ZoomUnits {
@@ -608,8 +608,8 @@ export declare interface ITransformPattern2 extends ITransformPattern {
     currentZoomMaximum: number;
     currentZoomMinimum: number;
 
-    zoom(zoom: number);
-    zoomByUnit(zoomUnit: ZoomUnits)
+    zoom(zoom: number): void;
+    zoomByUnit(zoomUnit: ZoomUnits): void;
 }
 
 export declare interface IValuePattern {
@@ -1224,4 +1224,67 @@ export declare enum OrientationTypes {
     None = 0,
     Horizontal = 1,
     Vertical = 2
+}
+
+export declare interface ProcessInfo {
+    processId: number;
+    processName: string;
+    sessionId: number;
+}
+
+export declare interface LaunchedProcessInfo {
+    processId: number;
+    threadId: number;
+}
+
+export declare interface SessionInfo {
+    sessionId: number;
+    userName?: string;
+    domainName?: string;
+    state: string;
+}
+
+export declare interface ChildSession {
+    getSessionId(): number;
+    isActive(): boolean;
+    terminate(): boolean;
+    getProcesses(): ProcessInfo[];
+    launchProcess(processPath: string, commandLine?: string): LaunchedProcessInfo;
+    getSessionInfo(): SessionInfo;
+}
+
+export declare interface RDPClient {
+    connect(): boolean;
+    disconnect(): boolean;
+    setServer(server: string): boolean;
+    setPort(port: number): boolean;
+    setDesktopSize(width: number, height: number): boolean;
+    setFullscreen(fullscreen: boolean): boolean;
+    getConnectionState(): number;
+    embedInWindow(windowHandle: number | Buffer): boolean;
+    sendKeys(keys: string): boolean;
+    getWindowHandle(): number | null;
+    setColorDepth(depth: number): boolean;
+    setAuthenticationLevel(level: number): boolean;
+    enableCredentialSaving(enable: boolean): boolean;
+    setUsername(username: string): boolean;
+    setDomain(domain: string): boolean;
+    reconnect(): boolean;
+}
+
+export declare interface DesktopInWindowResult {
+    sessionId: number;
+    childSession: ChildSession;
+    rdpClient: RDPClient;
+}
+
+export declare interface DesktopManager {
+    createDesktopInWindow(windowHandle: number | Buffer, width?: number, height?: number): DesktopInWindowResult;
+    getChildSession(): ChildSession | null;
+    getRDPClient(): RDPClient | null;
+    launchApplication(processPath: string, commandLine?: string): LaunchedProcessInfo;
+    resizeDesktop(width: number, height: number): boolean;
+    cleanup(): boolean;
+    getSessionId(): number;
+    isConnected(): boolean;
 }

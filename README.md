@@ -22,9 +22,11 @@ Automate Windows desktop applications with full access to the Microsoft UI Autom
 - **🎯 Complete UI Automation API** — Full native bindings to Windows UI Automation
 - **🔧 30+ Automation Patterns** — Invoke, Value, Text, Selection, Grid, Window, and more
 - **📡 Event Handling** — Focus changes, property changes, structure changes, automation events
+- **🏢 COM Automation** — Outlook and Excel connectors with full Office API support
 - **📘 TypeScript Support** — Comprehensive type definitions included
 - **⚡ Native Performance** — C++ addon for optimal speed
 - **🔍 Element Discovery** — Find elements by name, control type, automation ID, and custom conditions
+- **🎨 Clean API** — Organized namespaces (UIAutomation, COMAutomation) for better code clarity
 
 ## 📋 Requirements
 
@@ -68,79 +70,73 @@ npm install
 ### Basic Example: Click a Button
 
 ```javascript
-const { Automation, PropertyIds, TreeScopes, PatternIds } = require('node-winautomation');
+const { UIAutomation } = require('node-winautomation');
 
 // Initialize automation
-const automation = new Automation();
+const automation = new UIAutomation.Automation();
 const root = automation.getRootElement();
 
 // Find a window by name
 const windowCondition = automation.createPropertyCondition(
-  PropertyIds.NamePropertyId,
+  UIAutomation.PropertyIds.NamePropertyId,
   'My Application'
 );
-const appWindow = root.findFirst(TreeScopes.Children, windowCondition);
+const appWindow = root.findFirst(UIAutomation.TreeScopes.Children, windowCondition);
 
 // Find and click a button
 const buttonCondition = automation.createPropertyCondition(
-  PropertyIds.NamePropertyId,
+  UIAutomation.PropertyIds.NamePropertyId,
   'Submit'
 );
-const button = appWindow.findFirst(TreeScopes.Descendants, buttonCondition);
+const button = appWindow.findFirst(UIAutomation.TreeScopes.Descendants, buttonCondition);
 
 // Click using Invoke pattern
-const invokePattern = button.getCurrentPattern(PatternIds.InvokePatternId);
+const invokePattern = button.getCurrentPattern(UIAutomation.PatternIds.InvokePatternId);
 invokePattern.invoke();
 ```
 
 ### Set Text in a Text Box
 
 ```javascript
-const { Automation, PropertyIds, ControlTypeIds, TreeScopes, PatternIds } = require('node-winautomation');
+const { UIAutomation } = require('node-winautomation');
 
-const automation = new Automation();
+const automation = new UIAutomation.Automation();
 const root = automation.getRootElement();
 
 // Find Notepad
 const notepad = root.findFirst(
-  TreeScopes.Children,
-  automation.createPropertyCondition(PropertyIds.NamePropertyId, 'Untitled - Notepad')
+  UIAutomation.TreeScopes.Children,
+  automation.createPropertyCondition(UIAutomation.PropertyIds.NamePropertyId, 'Untitled - Notepad')
 );
 
 // Find the edit control
 const editControl = notepad.findFirst(
-  TreeScopes.Descendants,
-  automation.createPropertyCondition(PropertyIds.ControlTypePropertyId, ControlTypeIds.EditControlTypeId)
+  UIAutomation.TreeScopes.Descendants,
+  automation.createPropertyCondition(UIAutomation.PropertyIds.ControlTypePropertyId, UIAutomation.ControlTypeIds.DocumentControlTypeId)
 );
 
 // Set text using Value pattern
-const valuePattern = editControl.getCurrentPattern(PatternIds.ValuePatternId);
+const valuePattern = editControl.getCurrentPattern(UIAutomation.PatternIds.ValuePatternId);
 valuePattern.setValue('Hello from node-winautomation!');
 ```
 
-### Listen for Focus Changes
+### COM Automation: Outlook Example
 
 ```javascript
-const { 
-  Automation, 
-  AutomationFocusChangedEventHandler 
-} = require('node-winautomation');
+const { COMAutomation } = require('node-winautomation');
 
-const automation = new Automation();
+// Create Outlook connector
+const outlook = new COMAutomation.OutlookConnector();
 
-// Create event handler
-const focusHandler = new AutomationFocusChangedEventHandler((element) => {
-  console.log('Focus changed to:', element.currentName);
-});
+// Create and send email
+const mail = outlook.createMailItem();
+mail.setTo('recipient@example.com');
+mail.setSubject('Hello from Node.js');
+mail.setBody('This email was sent using node-winautomation!');
+mail.send();
 
-// Register handler
-automation.addFocusChangedEventHandler(null, focusHandler);
-
-// Keep process running
-setInterval(() => {}, 1000);
-
-// Cleanup when done
-// automation.removeFocusChangedEventHandler(focusHandler);
+// Cleanup
+outlook.release();
 ```
 
 ## 📖 API Reference
@@ -290,27 +286,26 @@ enum PropertyIds {
 ### Calculator Automation
 
 ```javascript
-// examples/calculator-example.js
-const { Automation, PropertyIds, TreeScopes, PatternIds } = require('node-winautomation');
+const { UIAutomation } = require('node-winautomation');
 
 async function clickButton(window, buttonName, automation) {
-  const condition = automation.createPropertyCondition(PropertyIds.NamePropertyId, buttonName);
-  const button = window.findFirst(TreeScopes.Descendants, condition);
+  const condition = automation.createPropertyCondition(UIAutomation.PropertyIds.NamePropertyId, buttonName);
+  const button = window.findFirst(UIAutomation.TreeScopes.Descendants, condition);
   
   if (button) {
-    const invokePattern = button.getCurrentPattern(PatternIds.InvokePatternId);
+    const invokePattern = button.getCurrentPattern(UIAutomation.PatternIds.InvokePatternId);
     invokePattern.invoke();
     await new Promise(r => setTimeout(r, 200));
   }
 }
 
 async function calculate() {
-  const automation = new Automation();
+  const automation = new UIAutomation.Automation();
   const root = automation.getRootElement();
   
   // Find Calculator
-  const calcCondition = automation.createPropertyCondition(PropertyIds.NamePropertyId, 'Calculator');
-  const calculator = root.findFirst(TreeScopes.Children, calcCondition);
+  const calcCondition = automation.createPropertyCondition(UIAutomation.PropertyIds.NamePropertyId, 'Calculator');
+  const calculator = root.findFirst(UIAutomation.TreeScopes.Children, calcCondition);
   
   if (calculator) {
     // Calculate 2 + 3 = 5
@@ -324,77 +319,85 @@ async function calculate() {
 calculate();
 ```
 
-### Element Inspector
+### Excel Automation with COM
 
 ```javascript
-const { Automation, TreeScopes } = require('node-winautomation');
+const { COMAutomation } = require('node-winautomation');
 
-function inspectElement(element, depth = 0) {
-  const indent = '  '.repeat(depth);
-  console.log(`${indent}Name: ${element.currentName}`);
-  console.log(`${indent}Type: ${element.currentLocalizedControlType}`);
-  console.log(`${indent}Class: ${element.currentClassName}`);
-  console.log(`${indent}AutomationId: ${element.currentAutomationId}`);
-  console.log(`${indent}---`);
-}
+// Create Excel connector
+const excel = new COMAutomation.ExcelConnector();
 
-function walkTree(element, automation, depth = 0, maxDepth = 3) {
-  if (depth > maxDepth) return;
-  
-  inspectElement(element, depth);
-  
-  const children = element.findAll(
-    TreeScopes.Children,
-    automation.createTrueCondition()
-  );
-  
-  for (const child of children) {
-    walkTree(child, automation, depth + 1, maxDepth);
-  }
-}
+// Create workbook and add data
+const workbook = excel.addWorkbook();
+const sheet = workbook.getActiveSheet();
 
-const automation = new Automation();
-const root = automation.getRootElement();
-walkTree(root, automation);
+// Set values
+sheet.getRange('A1').setValue('Product');
+sheet.getRange('B1').setValue('Price');
+sheet.getRange('A2').setValue('Widget');
+sheet.getRange('B2').setValue(29.99);
+
+// Format cells
+const headerRange = sheet.getRange('A1:B1');
+headerRange.getFont().setBold(true);
+headerRange.getInterior().setColor(0xCCCCCC);
+
+// Save and close
+workbook.saveAs('output.xlsx', COMAutomation.XlFileFormat.xlOpenXMLWorkbook);
+excel.quit();
+excel.release();
 ```
+
+More examples available in `features/ui-automation/examples/` and `features/com-automation/examples/`.
 
 ## 📂 Project Structure
 
 ```
 node-winautomation/
-├── index.js                 # Module entry point
+├── index.js                 # Module entry point with UIAutomation & COMAutomation namespaces
 ├── index.d.ts               # TypeScript definitions
 ├── binding.gyp              # Native build configuration
 ├── package.json
+├── README.md
+├── ARCHITECTURE.md
+├── GETTING_STARTED.md
 │
-├── wrappers/                # Core COM wrappers
-│   ├── IUIAutomationWrapper.*
-│   ├── IUIAutomationElementWrapper.*
-│   ├── IUIAutomationTreeWalkerWrapper.*
-│   └── ...
-│
-├── patterns/                # Automation pattern implementations
-│   ├── IUIAutomationInvokePatternWrapper.*
-│   ├── IUIAutomationValuePatternWrapper.*
-│   ├── IUIAutomationTextPatternWrapper.*
-│   └── ... (30+ patterns)
-│
-├── enumerations/            # UI Automation enums
-│   ├── ControlTypeIdsWrapper.*
-│   ├── PropertyIdsWrapper.*
-│   └── ...
-│
-├── utilities/               # Event handlers & helpers
-│   ├── AutomationEventHandler.*
-│   ├── FocusChangedEventHandler.*
-│   └── ...
-│
-├── examples/                # Usage examples
-│   ├── calculator-example.js
-│   └── notepad-example.js
+├── features/                # Feature-based organization
+│   │
+│   ├── ui-automation/       # UI Automation feature
+│   │   ├── src/
+│   │   │   ├── wrappers/    # Core UI Automation wrappers
+│   │   │   ├── patterns/    # 30+ automation patterns
+│   │   │   ├── enumerations/# UI Automation enums
+│   │   │   ├── utilities/   # Event handlers & helpers
+│   │   │   └── AutomationAddon.*
+│   │   ├── examples/
+│   │   │   ├── calculator-example.js
+│   │   │   ├── notepad-example.js
+│   │   │   └── outlook-message-example.js
+│   │   └── docs/
+│   │
+│   ├── com-automation/      # COM Automation feature
+│   │   ├── src/core/        # COM base classes
+│   │   │   ├── COMObject.*
+│   │   │   ├── COMVariant.*
+│   │   │   └── COMEventSink.*
+│   │   ├── lib/connectors/  # Office connectors
+│   │   │   ├── OutlookConnector.js
+│   │   │   ├── ExcelConnector.js
+│   │   │   └── index.js
+│   │   ├── examples/
+│   │   └── docs/
+│   │
+│   └── desktop-management/  # Desktop Management (optional)
+│       ├── src/wrappers/    # Child sessions & RDP
+│       ├── examples/
+│       └── docs/
 │
 └── tests/                   # Test suite
-    └── *.test.js
+    ├── *.test.js            # Unit tests
+    ├── test-*.js            # Integration tests
+    └── README.md
 ```
 
 ## 🔧 Troubleshooting
@@ -436,7 +439,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 🙏 Credits
 
-This project is based on the excellent work by **Chris Nimmons** and **Jake Cyr** in the [@bright-fish/node-ui-automation](https://github.com/bright-fish/node-ui-automation) project.
+The UI Automation feature is based on the excellent work by **Chris Nimmons** and **Jake Cyr** in the [@bright-fish/node-ui-automation](https://github.com/bright-fish/node-ui-automation) project.
 
 ## 📄 License
 
@@ -444,6 +447,7 @@ MIT License - See [LICENSE](LICENSE) file for details.
 
 ## 📚 Resources
 
+- [Desktop Management API](./features/desktop-management/docs/DESKTOP_MANAGEMENT.md) - Child sessions and RDP embedding
 - [Windows UI Automation Overview](https://docs.microsoft.com/en-us/windows/win32/winauto/entry-uiauto-win32)
 - [UI Automation Control Patterns](https://docs.microsoft.com/en-us/windows/win32/winauto/uiauto-controlpatternsoverview)
 - [Accessibility Insights for Windows](https://accessibilityinsights.io/docs/windows/overview/)
