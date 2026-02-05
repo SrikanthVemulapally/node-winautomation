@@ -3,7 +3,7 @@
 # node-winautomation
 
 [![npm version](https://img.shields.io/npm/v/node-winautomation.svg)](https://www.npmjs.com/package/node-winautomation)
-[![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)](https://github.com/user/node-winautomation)
+[![Platform](https://img.shields.io/badge/platform-Windows-blue.svg)](https://github.com/SrikanthVemulapally/node-winautomation)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)](https://nodejs.org/)
 
@@ -48,7 +48,7 @@ The native addon will be compiled automatically during installation.
 ### From Source
 
 ```bash
-git clone https://github.com/user/node-winautomation.git
+git clone https://github.com/SrikanthVemulapally/node-winautomation.git
 cd node-winautomation
 npm install
 ```
