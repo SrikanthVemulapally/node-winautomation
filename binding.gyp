@@ -53,14 +53,6 @@
             # UI Automation - Wrappers
             "features/ui-automation/src/wrappers/RectWrapper.cc",
             "features/ui-automation/src/wrappers/IUnknownWrapper.cc",
-
-            # Desktop Management Feature
-            "features/desktop-management/src/wrappers/ChildSessionWrapper.cc",
-            "features/desktop-management/src/wrappers/ChildSessionChecker.cc",
-            # RDP functionality will be handled by separate helper process
-            # "features/desktop-management/src/wrappers/RDPClientWrapper.cc",  # Legacy - not used
-            # "features/desktop-management/src/wrappers/DesktopManagerWrapper.cc",  # Temporarily disabled
-
             "features/ui-automation/src/wrappers/IUIAutomationElementWrapper.cc" ,
             "features/ui-automation/src/wrappers/IUIAutomationWrapper.cc", 
             "features/ui-automation/src/wrappers/IUIAutomationConditionWrapper.cc",

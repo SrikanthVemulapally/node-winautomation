@@ -58,10 +58,6 @@ public:
 
     Napi::FunctionReference *IRawElementProviderSimpleWrapperConstructor;
 
-    Napi::FunctionReference *ChildSessionWrapperConstructor;
-    Napi::FunctionReference *RDPClientWrapperConstructor;
-    Napi::FunctionReference *DesktopManagerWrapperConstructor;
-
     // todo: add all the constructors for the providers here.
     
     AutomationAddon(Napi::Env env, Napi::Object exports);

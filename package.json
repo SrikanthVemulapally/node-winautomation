@@ -1,6 +1,6 @@
 {
   "name": "node-winautomation",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Complete Windows automation library with UI Automation and COM support for Office (Excel, Word, PowerPoint, Outlook, Access, OneNote, Visio), SAP GUI, and Acrobat",
   "main": "index.js",
   "scripts": {

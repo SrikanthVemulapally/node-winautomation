@@ -64,11 +64,6 @@ AutomationAddon::AutomationAddon(Napi::Env env, Napi::Object exports)
 
     IUIAutomationTextRangePatternWrapperConstructor = IUIAutomationTextRangeWrapper::Initialize(env);
 
-    // Desktop Management
-    ChildSessionWrapperConstructor = ChildSessionWrapper::Initialize(env);
-    // RDP functionality will be handled by separate helper process
-    // DesktopManagerWrapperConstructor = DesktopManagerWrapper::Initialize(env);  // Temporarily disabled
-
     auto addonDefinition = {
         InstanceValue("Automation", IUIAutomationWrapperConstructor->Value()),
         InstanceValue("AutomationEventHandler", IUIAutomationEventHandlerWrapperConstructor->Value()),
@@ -102,29 +97,6 @@ AutomationAddon::AutomationAddon(Napi::Env env, Napi::Object exports)
     };
 
     DefineAddon(exports, addonDefinition);
-    
-    // Export desktop management features
-    exports.Set("ChildSession", ChildSessionWrapperConstructor->Value());
-    
-    // Export child session checker function
-    exports.Set("checkChildSessionRequirements", 
-        Napi::Function::New(env, [](const Napi::CallbackInfo& info) {
-            return ChildSessionChecker::PerformAllChecks(info.Env());
-        }));
-    
-    // Export child session enabler function
-    exports.Set("enableChildSessionsAPI", 
-        Napi::Function::New(env, [](const Napi::CallbackInfo& info) {
-            Napi::Env env = info.Env();
-            auto result = ChildSessionChecker::EnableChildSessions();
-            
-            Napi::Object obj = Napi::Object::New(env);
-            obj.Set("success", Napi::Boolean::New(env, result.passed));
-            obj.Set("message", Napi::String::New(env, result.message));
-            obj.Set("errorCode", Napi::Number::New(env, result.errorCode));
-            
-            return obj;
-        }));
 }
 
 AutomationAddon::~AutomationAddon()
