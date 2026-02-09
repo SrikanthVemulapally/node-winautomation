@@ -139,7 +139,7 @@ describe('IUIAutomation', () => {
             const propertyChangedEventHandler = new AutomationPropertyChangedEventHandler((sender) => {
                 expect(sender).toBeDefined();
 
-                automation.removePropertyChangedEventHandler(focusChangedEventHandler);
+                automation.removePropertyChangedEventHandler(propertyChangedEventHandler);
 
                 done();
             });
@@ -167,7 +167,7 @@ describe('IUIAutomation', () => {
             const structureChangedEventHandler = new AutomationStructureChangedEventHandler((sender) => {
                 expect(sender).not.toBeNull();
 
-                automation.removeStructureChangedEventHandler(focusChangedEventHandler);
+                automation.removeStructureChangedEventHandler(structureChangedEventHandler);
 
                 done();
             });

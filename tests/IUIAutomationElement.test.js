@@ -30,6 +30,7 @@ describe('IUIAutomationElement', () => {
     });
 
     test('findAll', () => {
+        const winverNamePropertyCondition = this.automation.createPropertyCondition(PropertyIds.NamePropertyId, "About Windows");
         const elements = this.desktopElement.findAll(TreeScopes.Subtree, winverNamePropertyCondition);
 
         const winverElement = elements.getElement(0);
@@ -73,7 +74,7 @@ describe('IUIAutomationElement', () => {
     });
 
     test('getCachedParent', () => {
-        const cachedParent = winverElement.getCachedParent();
+        const cachedParent = this.winverElement.getCachedParent();
 
         expect(cachedParent).toBeDefined();
     });
@@ -92,7 +93,7 @@ describe('IUIAutomationElement', () => {
 
         cacheRequest.addProperty(PropertyIds.NamePropertyId);
 
-        winverCachedElement = winverElement.buildUpdatedCache(cacheRequest);
+        const winverCachedElement = this.winverElement.buildUpdatedCache(cacheRequest);
 
         const value = winverCachedElement.getCachedPropertyValue(PropertyIds.NamePropertyId);
 
@@ -107,7 +108,7 @@ describe('IUIAutomationElement', () => {
         cacheRequest.treeFilter = this.automation.rawViewCondition;
         cacheRequest.addProperty(PropertyIds.NamePropertyId);
 
-        winverCachedElement = winverElement.buildUpdatedCache(cacheRequest);
+        const winverCachedElement = this.winverElement.buildUpdatedCache(cacheRequest);
 
         const value = winverCachedElement.getCachedPropertyValueEx(PropertyIds.NamePropertyId, true);
 
@@ -115,7 +116,7 @@ describe('IUIAutomationElement', () => {
     });
 
     test('getClickablePoint', () => {
-        const isClickable = winverElement.getClickablePoint({ x: 123, y: 123 });
+        const isClickable = this.winverElement.getClickablePoint({ x: 123, y: 123 });
 
         expect(isClickable).toBe(false);
     });
@@ -521,13 +522,13 @@ describe('IUIAutomationElement', () => {
     test.todo('getCurrentPatternAs');
 
     test('getCurrentPropertyValue', () => {
-        const value = winverElement.getCurrentPropertyValue(PropertyIds.NamePropertyId);
+        const value = this.winverElement.getCurrentPropertyValue(PropertyIds.NamePropertyId);
 
         expect(value).toBe('About Windows');
     });
 
     test('getCurrentPropertyValueEx', () => {
-        const value = winverElement.getCurrentPropertyValueEx(PropertyIds.NamePropertyId, true);
+        const value = this.winverElement.getCurrentPropertyValueEx(PropertyIds.NamePropertyId, true);
 
         expect(value).toBe('About Windows');
     });
@@ -536,6 +537,6 @@ describe('IUIAutomationElement', () => {
     test.todo('getRuntimeId');
 
     test('setFocus', () => {
-        winverElement.setFocus();
+        this.winverElement.setFocus();
     });
 });

@@ -201,12 +201,37 @@ Napi::Value COMObject::GetProperty(const Napi::CallbackInfo& info) {
         return env.Null();
     }
 
-    DISPPARAMS dispParams = { NULL, NULL, 0, 0 };
+    // Support parameterized properties (e.g., collection.Item(index))
+    // Additional arguments after property name are treated as property parameters
+    DISPPARAMS dispParams;
+    std::vector<VARIANT> args;
+    
+    if (info.Length() > 1) {
+        // Convert additional arguments to VARIANTs (in reverse order for COM)
+        args.resize(info.Length() - 1);
+        for (size_t i = 1; i < info.Length(); i++) {
+            args[info.Length() - 1 - i] = ValueToVariant(info[i]);
+        }
+        dispParams.rgvarg = args.data();
+        dispParams.cArgs = static_cast<UINT>(args.size());
+    } else {
+        dispParams.rgvarg = NULL;
+        dispParams.cArgs = 0;
+    }
+    
+    dispParams.rgdispidNamedArgs = NULL;
+    dispParams.cNamedArgs = 0;
+    
     VARIANT result;
     VariantInit(&result);
 
     HRESULT hr = pDispatch->Invoke(dispId, IID_NULL, LOCALE_USER_DEFAULT, 
                                     DISPATCH_PROPERTYGET, &dispParams, &result, NULL, NULL);
+
+    // Clean up argument VARIANTs
+    for (auto& arg : args) {
+        VariantClear(&arg);
+    }
 
     if (FAILED(hr)) {
         Napi::Error::New(env, "Failed to get property").ThrowAsJavaScriptException();

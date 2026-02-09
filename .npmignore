@@ -1,0 +1,26 @@
+# Development files
+.vscode/
+.git/
+.gitignore
+
+# Test files
+tests/
+*.test.js
+
+# Documentation (keep only essential)
+ARCHITECTURE.md
+GETTING_STARTED.md
+features/*/docs/
+features/*/examples/
+
+# Build artifacts
+build/
+node_modules/
+*.log
+*.tmp
+
+# Scripts
+scripts/
+
+# Desktop management (removed feature)
+features/desktop-management/

@@ -1,7 +1,7 @@
 {
   "name": "node-winautomation",
   "version": "1.0.0",
-  "description": "Node.js Windows UI Automation native addon for automating Windows desktop applications",
+  "description": "Complete Windows automation library with UI Automation and COM support for Office (Excel, Word, PowerPoint, Outlook, Access, OneNote, Visio), SAP GUI, and Acrobat",
   "main": "index.js",
   "scripts": {
     "configure": "node-gyp configure",
@@ -18,7 +18,14 @@
     "ui-automation",
     "desktop",
     "testing",
-    "accessibility"
+    "accessibility",
+    "excel",
+    "word",
+    "powerpoint",
+    "outlook",
+    "com-automation",
+    "office-automation",
+    "sap-gui"
   ],
   "author": "Srikanth",
   "license": "MIT",
@@ -26,7 +33,9 @@
     "type": "git",
     "url": "https://github.com/SrikanthVemulapally/node-winautomation.git"
   },
-  "os": ["win32"],
+  "os": [
+    "win32"
+  ],
   "engines": {
     "node": ">=14.0.0"
   },
@@ -34,14 +43,14 @@
     "index.js",
     "index.d.ts",
     "binding.gyp",
-    "src/**/*",
+    "features/**/*",
     "README.md",
     "LICENSE"
   ],
   "gypfile": true,
   "dependencies": {
     "bindings": "^1.5.0",
-    "node-addon-api": "^4.1.0"
-  },
-  "devDependencies": {}
+    "node-addon-api": "^4.1.0",
+    "node-rdpjs": "^0.3.0"
+  }
 }

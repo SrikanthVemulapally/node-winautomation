@@ -42,6 +42,9 @@ async function createEmail() {
         // mail.send();
         // console.log('✓ Email sent');
         
+    } catch (error) {
+        console.error('❌ Failed to create email:', error.message);
+        throw error;
     } finally {
         outlook.release();
     }
@@ -80,6 +83,9 @@ async function createAppointment() {
         appointment.save();
         console.log('✓ Appointment created');
         
+    } catch (error) {
+        console.error('❌ Failed to create appointment:', error.message);
+        throw error;
     } finally {
         outlook.release();
     }
@@ -108,6 +114,9 @@ async function createContact() {
         contact.save();
         console.log('✓ Contact created');
         
+    } catch (error) {
+        console.error('❌ Failed to create contact:', error.message);
+        throw error;
     } finally {
         outlook.release();
     }
@@ -135,6 +144,9 @@ async function readInbox() {
             console.log(`  From: ${firstItem.getProperty('SenderName')}`);
         }
         
+    } catch (error) {
+        console.error('❌ Failed to read inbox:', error.message);
+        throw error;
     } finally {
         outlook.release();
     }
@@ -173,6 +185,9 @@ async function createHtmlEmail() {
         
         console.log('✓ HTML email created');
         
+    } catch (error) {
+        console.error('❌ Failed to create HTML email:', error.message);
+        throw error;
     } finally {
         outlook.release();
     }
@@ -204,6 +219,9 @@ async function createTask() {
         task.save();
         console.log('✓ Task created');
         
+    } catch (error) {
+        console.error('❌ Failed to create task:', error.message);
+        throw error;
     } finally {
         outlook.release();
     }

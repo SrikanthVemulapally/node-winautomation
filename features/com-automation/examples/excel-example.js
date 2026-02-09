@@ -39,6 +39,9 @@ async function example1() {
         workbook.close(false);
         console.log('✓ Workbook closed\n');
         
+    } catch (error) {
+        console.error('❌ Failed to create simple workbook:', error.message);
+        throw error;
     } finally {
         excel.quit();
         excel.release();
@@ -75,6 +78,9 @@ async function example2() {
         workbook.close(false);
         console.log('✓ Workbook closed\n');
         
+    } catch (error) {
+        console.error('❌ Failed to create workbook with multiple sheets:', error.message);
+        throw error;
     } finally {
         excel.quit();
         excel.release();
@@ -109,6 +115,9 @@ async function example3() {
         workbook.close(false);
         console.log('✓ Workbook closed\n');
         
+    } catch (error) {
+        console.error('❌ Failed to demonstrate display settings:', error.message);
+        throw error;
     } finally {
         excel.quit();
         excel.release();
@@ -142,6 +151,9 @@ async function example4() {
         workbook.close(false);
         console.log('✓ Workbook closed\n');
         
+    } catch (error) {
+        console.error('❌ Failed to save in different formats:', error.message);
+        throw error;
     } finally {
         excel.quit();
         excel.release();
@@ -159,6 +171,9 @@ async function example5() {
         console.log(`Excel Version: ${version}`);
         console.log('(16.0 = Excel 2016/2019/365, 15.0 = Excel 2013, 14.0 = Excel 2010)\n');
         
+    } catch (error) {
+        console.error('❌ Failed to get Excel version:', error.message);
+        throw error;
     } finally {
         excel.release();
     }

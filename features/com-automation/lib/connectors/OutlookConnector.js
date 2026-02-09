@@ -146,6 +146,75 @@ class OutlookConnector {
     }
 
     /**
+     * Get deleted items folder
+     * @returns {Folder} Deleted items folder
+     */
+    getDeletedItems() {
+        return this.getDefaultFolder(OlDefaultFolders.olFolderDeletedItems);
+    }
+
+    /**
+     * Get outbox folder
+     * @returns {Folder} Outbox folder
+     */
+    getOutbox() {
+        return this.getDefaultFolder(OlDefaultFolders.olFolderOutbox);
+    }
+
+    /**
+     * Get contacts folder
+     * @returns {Folder} Contacts folder
+     */
+    getContacts() {
+        return this.getDefaultFolder(OlDefaultFolders.olFolderContacts);
+    }
+
+    /**
+     * Get tasks folder
+     * @returns {Folder} Tasks folder
+     */
+    getTasks() {
+        return this.getDefaultFolder(OlDefaultFolders.olFolderTasks);
+    }
+
+    /**
+     * Get folder by path
+     * @param {string} path - Folder path (e.g., "Inbox\\Subfolder")
+     * @returns {Folder} Folder wrapper
+     */
+    getFolderByPath(path) {
+        const ns = this.getNamespace();
+        const folder = ns.invoke('GetFolderFromID', path);
+        return new Folder(folder);
+    }
+
+    /**
+     * Create a new folder
+     * @param {string} name - Folder name
+     * @param {Folder} parentFolder - Parent folder
+     * @returns {Folder} New folder
+     */
+    createFolder(name, parentFolder) {
+        const folders = parentFolder.folder.getProperty('Folders');
+        const newFolder = folders.invoke('Add', name);
+        return new Folder(newFolder);
+    }
+
+    /**
+     * Empty deleted items folder
+     */
+    emptyDeletedItems() {
+        const ns = this.getNamespace();
+        const deletedItems = this.getDeletedItems();
+        const items = deletedItems.getItems();
+        const count = items.getProperty('Count');
+        for (let i = count; i >= 1; i--) {
+            const item = items.invoke('Item', i);
+            item.invoke('Delete');
+        }
+    }
+
+    /**
      * Get calendar folder
      * @returns {Folder} Calendar folder
      */
@@ -221,6 +290,47 @@ class OutlookConnector {
     }
 
     /**
+     * Get rules collection
+     * @returns {COMObject} Rules collection
+     */
+    getRules() {
+        const session = this.getNamespace();
+        const store = session.getProperty('DefaultStore');
+        return store.getProperty('Rules');
+    }
+    
+    /**
+     * Create new rule
+     * @param {string} name - Rule name
+     * @param {number} ruleType - Rule type (0=Receive, 1=Send)
+     * @returns {OutlookRule} New rule wrapper
+     */
+    createRule(name, ruleType = 0) {
+        const rules = this.getRules();
+        const rule = rules.invoke('Create', name, ruleType);
+        return new OutlookRule(rule);
+    }
+    
+    /**
+     * Get rule by name
+     * @param {string} name - Rule name
+     * @returns {OutlookRule} Rule wrapper
+     */
+    getRule(name) {
+        const rules = this.getRules();
+        const rule = rules.invoke('Item', name);
+        return new OutlookRule(rule);
+    }
+    
+    /**
+     * Save rules
+     */
+    saveRules() {
+        const rules = this.getRules();
+        rules.invoke('Save');
+    }
+
+    /**
      * Release resources
      */
     release() {
@@ -271,14 +381,115 @@ class MailItem {
 
     getSize() { return this.item.getProperty('Size'); }
 
+    getSenderName() { return this.item.getProperty('SenderName'); }
+    getSenderEmailAddress() { return this.item.getProperty('SenderEmailAddress'); }
+
+    getCategories() { return this.item.getProperty('Categories'); }
+    setCategories(value) { this.item.setProperty('Categories', value); }
+    
+    /**
+     * Add category to item
+     * @param {string} category - Category name
+     */
+    addCategory(category) {
+        const current = this.getCategories();
+        if (current && current.length > 0) {
+            this.setCategories(current + '; ' + category);
+        } else {
+            this.setCategories(category);
+        }
+    }
+    
+    /**
+     * Remove category from item
+     * @param {string} category - Category name
+     */
+    removeCategory(category) {
+        const current = this.getCategories();
+        if (current) {
+            const categories = current.split(';').map(c => c.trim());
+            const filtered = categories.filter(c => c !== category);
+            this.setCategories(filtered.join('; '));
+        }
+    }
+    
+    /**
+     * Clear all categories
+     */
+    clearCategories() {
+        this.setCategories('');
+    }
+
+    getFlagStatus() { return this.item.getProperty('FlagStatus'); }
+    setFlagStatus(value) { this.item.setProperty('FlagStatus', value); }
+    
+    /**
+     * Set voting options for mail
+     * @param {string} options - Voting options (e.g., 'Approve;Reject')
+     */
+    setVotingOptions(options) {
+        this.item.setProperty('VotingOptions', options);
+    }
+    
+    /**
+     * Get voting options
+     * @returns {string} Voting options
+     */
+    getVotingOptions() {
+        return this.item.getProperty('VotingOptions');
+    }
+    
+    /**
+     * Get voting response
+     * @returns {string} Voting response
+     */
+    getVotingResponse() {
+        return this.item.getProperty('VotingResponse');
+    }
+
     send() { this.item.invoke('Send'); }
     display(modal = false) { this.item.invoke('Display', modal); }
     save() { this.item.invoke('Save'); }
     close(saveMode = 0) { this.item.invoke('Close', saveMode); }
+    delete() { this.item.invoke('Delete'); }
     
     reply() { return new MailItem(this.item.invoke('Reply')); }
     replyAll() { return new MailItem(this.item.invoke('ReplyAll')); }
     forward() { return new MailItem(this.item.invoke('Forward')); }
+
+    /**
+     * Move to folder
+     * @param {Folder} folder - Destination folder
+     */
+    move(folder) {
+        this.item.invoke('Move', folder.folder);
+    }
+
+    /**
+     * Copy to folder
+     * @param {Folder} folder - Destination folder
+     * @returns {MailItem} Copied item
+     */
+    copy(folder) {
+        const copied = this.item.invoke('Copy');
+        const copiedItem = new MailItem(copied);
+        copiedItem.move(folder);
+        return copiedItem;
+    }
+
+    /**
+     * Mark as read
+     */
+    markAsRead() {
+        this.setUnRead(false);
+    }
+
+    /**
+     * Mark as unread
+     */
+    markAsUnread() {
+        this.setUnRead(true);
+    }
 
     getAttachments() {
         return this.item.getProperty('Attachments');
@@ -286,7 +497,40 @@ class MailItem {
 
     addAttachment(path, type = 1, position = 1, displayName = '') {
         const attachments = this.getAttachments();
+        if (!attachments) {
+            throw new Error('Failed to get attachments collection');
+        }
         return attachments.invoke('Add', path, type, position, displayName);
+    }
+
+    /**
+     * Get attachment count
+     * @returns {number} Number of attachments
+     */
+    getAttachmentCount() {
+        const attachments = this.getAttachments();
+        return attachments ? attachments.getProperty('Count') : 0;
+    }
+
+    /**
+     * Save attachment to file
+     * @param {number} index - Attachment index (1-based)
+     * @param {string} path - Save path
+     */
+    saveAttachment(index, path) {
+        const attachments = this.getAttachments();
+        const attachment = attachments.invoke('Item', index);
+        attachment.invoke('SaveAsFile', path);
+    }
+
+    /**
+     * Remove attachment
+     * @param {number} index - Attachment index (1-based)
+     */
+    removeAttachment(index) {
+        const attachments = this.getAttachments();
+        const attachment = attachments.invoke('Item', index);
+        attachment.invoke('Delete');
     }
 
     release() { this.item.release(); }
@@ -328,9 +572,31 @@ class AppointmentItem {
     getBusyStatus() { return this.item.getProperty('BusyStatus'); }
     setBusyStatus(value) { this.item.setProperty('BusyStatus', value); }
 
+    /**
+     * Get required attendees
+     * @returns {string} Required attendees
+     */
+    getRequiredAttendees() { return this.item.getProperty('RequiredAttendees'); }
+    setRequiredAttendees(value) { this.item.setProperty('RequiredAttendees', value); }
+
+    /**
+     * Get optional attendees
+     * @returns {string} Optional attendees
+     */
+    getOptionalAttendees() { return this.item.getProperty('OptionalAttendees'); }
+    setOptionalAttendees(value) { this.item.setProperty('OptionalAttendees', value); }
+
+    /**
+     * Get meeting status
+     * @returns {number} Meeting status
+     */
+    getMeetingStatus() { return this.item.getProperty('MeetingStatus'); }
+    setMeetingStatus(value) { this.item.setProperty('MeetingStatus', value); }
+
     save() { this.item.invoke('Save'); }
     send() { this.item.invoke('Send'); }
     display(modal = false) { this.item.invoke('Display', modal); }
+    delete() { this.item.invoke('Delete'); }
     
     release() { this.item.release(); }
 }
@@ -367,6 +633,24 @@ class ContactItem {
 
     getJobTitle() { return this.item.getProperty('JobTitle'); }
     setJobTitle(value) { this.item.setProperty('JobTitle', value); }
+
+    getEmail2Address() { return this.item.getProperty('Email2Address'); }
+    setEmail2Address(value) { this.item.setProperty('Email2Address', value); }
+
+    getEmail3Address() { return this.item.getProperty('Email3Address'); }
+    setEmail3Address(value) { this.item.setProperty('Email3Address', value); }
+
+    getHomeTelephoneNumber() { return this.item.getProperty('HomeTelephoneNumber'); }
+    setHomeTelephoneNumber(value) { this.item.setProperty('HomeTelephoneNumber', value); }
+
+    getBusinessAddress() { return this.item.getProperty('BusinessAddress'); }
+    setBusinessAddress(value) { this.item.setProperty('BusinessAddress', value); }
+
+    getHomeAddress() { return this.item.getProperty('HomeAddress'); }
+    setHomeAddress(value) { this.item.setProperty('HomeAddress', value); }
+
+    getWebPage() { return this.item.getProperty('WebPage'); }
+    setWebPage(value) { this.item.setProperty('WebPage', value); }
 
     save() { this.item.invoke('Save'); }
     display(modal = false) { this.item.invoke('Display', modal); }
@@ -408,8 +692,27 @@ class TaskItem {
     getComplete() { return this.item.getProperty('Complete'); }
     setComplete(value) { this.item.setProperty('Complete', value); }
 
+    getOwner() { return this.item.getProperty('Owner'); }
+    setOwner(value) { this.item.setProperty('Owner', value); }
+
+    getActualWork() { return this.item.getProperty('ActualWork'); }
+    setActualWork(value) { this.item.setProperty('ActualWork', value); }
+
+    getTotalWork() { return this.item.getProperty('TotalWork'); }
+    setTotalWork(value) { this.item.setProperty('TotalWork', value); }
+
     save() { this.item.invoke('Save'); }
     display(modal = false) { this.item.invoke('Display', modal); }
+    delete() { this.item.invoke('Delete'); }
+
+    /**
+     * Mark task as complete
+     */
+    markComplete() {
+        this.setComplete(true);
+        this.setPercentComplete(100);
+        this.save();
+    }
     
     release() { this.item.release(); }
 }
@@ -432,12 +735,90 @@ class Folder {
 
     getItem(index) {
         const items = this.getItems();
+        if (!items) {
+            throw new Error('Failed to get items collection');
+        }
         return items.invoke('Item', index);
     }
 
     getCount() {
         const items = this.getItems();
+        if (!items) {
+            throw new Error('Failed to get items collection');
+        }
         return items.getProperty('Count');
+    }
+
+    /**
+     * Get folders collection
+     * @returns {COMObject} Folders collection
+     */
+    getFolders() {
+        return this.folder.getProperty('Folders');
+    }
+
+    /**
+     * Get subfolder by name
+     * @param {string} name - Folder name
+     * @returns {Folder} Subfolder
+     */
+    getSubfolder(name) {
+        const folders = this.getFolders();
+        const subfolder = folders.invoke('Item', name);
+        return new Folder(subfolder);
+    }
+
+    /**
+     * Delete folder
+     */
+    delete() {
+        this.folder.invoke('Delete');
+    }
+
+    /**
+     * Search items by subject
+     * @param {string} subject - Subject to search for
+     * @returns {Array} Array of matching items
+     */
+    searchBySubject(subject) {
+        const items = this.getItems();
+        const filter = `[Subject] = "${subject}"`;
+        const results = items.invoke('Restrict', filter);
+        return results;
+    }
+
+    /**
+     * Get unread items
+     * @returns {COMObject} Filtered items collection
+     */
+    getUnreadItems() {
+        const items = this.getItems();
+        const filter = '[UnRead] = true';
+        return items.invoke('Restrict', filter);
+    }
+
+    /**
+     * Get items by date range
+     * @param {Date} startDate - Start date
+     * @param {Date} endDate - End date
+     * @returns {COMObject} Filtered items collection
+     */
+    getItemsByDateRange(startDate, endDate) {
+        const items = this.getItems();
+        const start = startDate.toISOString();
+        const end = endDate.toISOString();
+        const filter = `[ReceivedTime] >= "${start}" AND [ReceivedTime] <= "${end}"`;
+        return items.invoke('Restrict', filter);
+    }
+
+    /**
+     * Sort items
+     * @param {string} property - Property to sort by
+     * @param {boolean} descending - Sort descending
+     */
+    sortItems(property, descending = false) {
+        const items = this.getItems();
+        items.invoke('Sort', `[${property}]`, descending);
     }
 
     release() { this.folder.release(); }
